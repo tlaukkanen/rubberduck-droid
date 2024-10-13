@@ -1,0 +1,5 @@
+src/fonts/*.ttf
+src/__pycache__/*.*
+src/*.ppn
+src/*.wav
+src/*.table

@@ -1,9 +1,12 @@
+<a href="https://www.buymeacoffee.com/tlaukkanen" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 # RubberDuck Droid
 
-This is a speech enabled assistant droid getting AI powers from OpenAI's GPT-4 large language model (LLM) and using speech capabilities of Azure Cognitive Services to provide speech-to-text recognition as well as text-to-speech synthesis for droid's responses.
+This is a speech enabled assistant droid getting AI powers from OpenAI's GPT large language models (LLM) and uses Realtime API to have real conversation with user. Uses AI models through Azure OpenAI services.
 
-Droid is built with following components:
+Droid is physically built with following components:
 
+* 3D printable droid
 * Raspberry Pi 4 - 3 or even Zero might work as well
 * WM8960 Audio Hat for both microphone and speakers
 * 3 pce SSD1306 displays - two for eyes and one small summary display in the base
@@ -15,17 +18,37 @@ Future ideas:
 
 # How to run?
 
-Define environment variables:
+Copy .env.template to .env and define environment variables:
 - SPEECH_KEY=<Azure text-to-speech API key>
 - OPENAI_API_KEY=<OpenAI API key>
 - SPEECH_REGION<Azure region for your Speech service>
 - PORCUPINE_ACCESS_KEY=<Porcupine access key for speech-to-text>
 
-You can run the project with Python:
+It's good practice to create virtual environment:
 
 ```sh
-> cd src/
-> python src/brains.py
+# Create virtual environment
+python3 -m venv .venv
+# Active the created virtual environment
+source .venv/bin/activate
+```
+
+Project uses [Poetry](https://www.python-poetry.org) for package management. If you don't yet have Poetry installed, you can install it with this:
+
+```sh
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Install required packages:
+
+```sh
+poetry install
+```
+
+Start the droid:
+
+```sh
+python3 main.py
 ```
 
 # Wakeword files

@@ -1,5 +1,9 @@
-src/fonts/*.ttf
-src/__pycache__/*.*
-src/*.ppn
-src/*.wav
-src/*.table
+**/fonts/*.ttf
+**/__pycache__/*.*
+**/*.ppn
+**/*.wav
+**/*.table
+**/*.sh
+.venv/*
+log/*
+.env

@@ -1,8 +1,0 @@
-openai==0.27.2
-pvporcupine==2.2.0
-pvrecorder==1.1.1
-azure-cognitiveservices-speech==1.28.0
-board
-Pillow
-Adafruit-Blinka
-adafruit-circuitpython-ssd1306

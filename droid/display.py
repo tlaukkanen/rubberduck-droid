@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import board
@@ -14,7 +15,11 @@ ImageDraw.rounded_rectangle = circle
 
 # Setting some variables for our reset pin etc.
 RESET_PIN = digitalio.DigitalInOut(board.D4)
-FONT = ImageFont.truetype("fonts/EarlyGameBoy.ttf", 8)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+font_path = os.path.join(current_dir, "fonts", "EarlyGameBoy.ttf")
+
+FONT = ImageFont.truetype(font_path, 8)
 
 class SummaryScreen:
   def __init__(self) -> None:
@@ -73,6 +78,18 @@ class Face:
     self.oled.image(self.image)
     self.oled.show()
 
+  def drawSleepyEyes(self):
+    x = random.randint(35, 45)
+    y = random.randint(0, 13)
+
+    # Draw a black filled box to clear the image.
+    self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
+    self.draw.circle(self.draw, 255, x, y, 48)
+    self.draw.rectangle((x, y, x+48, y+24), outline=0, fill=0)
+
+    self.oled.image(self.image)
+    self.oled.show()
+
   def drawBlinkEyes(self):
     if not random.randint(0,3) % 2:
       self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
@@ -83,10 +100,10 @@ class Face:
   def poweroff(self):
     self.oled.poweroff()
 
-# face = Face()
-# try:
-#   while True:
-#     face.drawEyes()
-#     time.sleep(random.randint(1,3))
-# except KeyboardInterrupt:
-#   face.poweroff()
+#face = Face()
+#try:
+#  while True:
+#    face.drawEyes()
+#    time.sleep(random.randint(1,3))
+#except KeyboardInterrupt:
+#  face.poweroff()

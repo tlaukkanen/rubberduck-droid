@@ -10,10 +10,8 @@ INPUT_CHANNELS = 1  # Input channels
 OUTPUT_CHANNELS = 1  # Output channels
 OUTPUT_SAMPLE_WIDTH = 2  # Output sample width
 
-INSTRUCTIONS = """Act as humorous Star Wars droid. 
-Respond in English. Keep your responses short max 6 sentences and to the point.
-"""
-VOICE_TYPE = "alloy"  # alloy, echo, shimmer
+INSTRUCTIONS = "Keep response short. Act as humorous Star Wars droid."
+VOICE_TYPE = "shimmer"  # alloy, echo, shimmer
 TEMPERATURE = 0.7
 MAX_RESPONSE_OUTPUT_TOKENS = 4096
 
@@ -41,6 +39,7 @@ def get_your_info(query: str):
         "Your nickname is Rubber Duck and you are a star wars droid."
         "You are expert in assisting with any task."
         "Your favorite programming language is Python."
+        "Keep answer short and humorous."
     ) 
     return information
 

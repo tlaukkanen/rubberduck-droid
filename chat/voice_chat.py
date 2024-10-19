@@ -367,11 +367,12 @@ async def start_realtime_chat():
                 session=SessionUpdateParams(
                     turn_detection=ServerVAD(type="server_vad", threshold=0.5, prefix_padding_ms=200, silence_duration_ms=600),
                     input_audio_transcription=InputAudioTranscription(model="whisper-1"),
+                    model="gpt-4o-realtime-preview-2024-10-01",
                     voice=VOICE_TYPE,
                     instructions=INSTRUCTIONS,
                     temperature=TEMPERATURE,
                     max_response_output_tokens=MAX_RESPONSE_OUTPUT_TOKENS,
-                    modalities=["audio"],
+                    modalities=['audio', 'text'],
                     input_audio_format="pcm16",
                     output_audio_format="pcm16",
                     tools=TOOLS,

@@ -4,10 +4,6 @@ from pvrecorder import PvRecorder
 
 class WakeWordDetector():
 
-  WAKEWORD_ENGLISH = 0
-  WAKEWORD_FINNISH = 1
-  
-
   def __init__(
     self,
     access_key
@@ -15,7 +11,7 @@ class WakeWordDetector():
     self._access_key = access_key
     self.recorder = None
     
-  def wait_for_wake_word(self):
+  async def wait_for_wake_word(self):
     porcupine = None
     try:
       current_dir = os.path.dirname(os.path.abspath(__file__))

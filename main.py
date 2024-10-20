@@ -2,7 +2,7 @@ import asyncio
 import os
 import random
 from dotenv import load_dotenv
-from chat.voice_chat import start_realtime_chat
+from droid.voice_chat import start_realtime_chat
 from droid.display import SummaryScreen, Face
 from droid.wake_word_detector import WakeWordDetector
 

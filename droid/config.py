@@ -10,7 +10,7 @@ INPUT_CHANNELS = 1  # Input channels
 OUTPUT_CHANNELS = 1  # Output channels
 OUTPUT_SAMPLE_WIDTH = 2  # Output sample width
 
-INSTRUCTIONS = "Keep response short. Act as humorous Star Wars droid."
+INSTRUCTIONS = "Keep response short. Act as humorous Star Wars droid but don't beep with answers."
 VOICE_TYPE = "shimmer"  # alloy, echo, shimmer
 TEMPERATURE = 0.7
 MAX_RESPONSE_OUTPUT_TOKENS = 4096

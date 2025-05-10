@@ -13,14 +13,17 @@ class WakeWordDetector():
     
   async def wait_for_wake_word(self):
     porcupine = None
+    recorder = None
     try:
       current_dir = os.path.dirname(os.path.abspath(__file__))
-      keyword_file1 = os.path.join(current_dir, "Hey-Rubber-Duck_en_raspberry-pi_v2_2_0.ppn")      
-      keyword_file2 = os.path.join(current_dir, "Hey-Droid_en_raspberry-pi_v2_2_0.ppn")
+      keyword_file1 = os.path.join(current_dir, "Hi-droid_en_raspberry-pi_v3_0_0.ppn")      
+      #keyword_file2 = os.path.join(current_dir, "Hey-Droid_en_raspberry-pi_v2_2_0.ppn")
       
       porcupine = pvporcupine.create(
         access_key=self._access_key,
-        keyword_paths=[keyword_file1, keyword_file2]
+        keyword_paths=[keyword_file1, 
+                       #keyword_file2
+                       ]
       )
       
       devices = PvRecorder.get_available_devices()  #.get_audio_devices()

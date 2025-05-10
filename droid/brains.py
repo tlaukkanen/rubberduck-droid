@@ -7,11 +7,17 @@ import time
 from threading import Event, Thread
 
 import azure.cognitiveservices.speech as speechsdk
-import openai
 import pvporcupine
 from pvrecorder import PvRecorder
 
-import vumeter
+from langchain_openai import ChatOpenAI
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.tools import tool
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_community.tools import SerpAPIWrapper
+
+#import vumeter
 from display import Face, SummaryScreen
 
 faulthandler.enable()
@@ -86,7 +92,7 @@ class ChatGPT():
   def answer_question_with_ssml(self, question, language="en-US"):
     # Set up the model and prompt
     # model_engine = "text-davinci-003"
-    model_engine = "gpt-4"
+    model_engine = "gpt-4.1"
 
     if time.time() - self.last_question_time > 900:
       prompt_messages = PROMPT_MESSAGES_EN.copy()
@@ -213,15 +219,18 @@ class RubberDuckWakeWordDetector():
     
   def run(self):
     porcupine = None
+    recorder = None
     try:
+      current_dir = os.path.dirname(os.path.abspath(__file__))
       porcupine = pvporcupine.create(
         access_key=self._access_key,
-        keyword_paths=['./Hey-Rubber-Duck_en_raspberry-pi_v2_2_0.ppn',
-                       './Hey-Droid_en_raspberry-pi_v2_2_0.ppn']
+        keyword_paths=[
+          os.path.join(current_dir, "Hi-droid_en_raspberry-pi_v3_0_0.ppn")
+        ]
       )
       
-      devices = PvRecorder.get_audio_devices()
-      device_index = 15
+      devices = PvRecorder.get_available_devices()
+      device_index = 1 #15
       device_name = "Built-in Audio Multichannel"
       for i in range(len(devices)):
          print('index: %d, device name: %s' % (i, devices[i]))
@@ -231,13 +240,13 @@ class RubberDuckWakeWordDetector():
       #     device_name = devices[i]
       #     break
       summary_screen.showText("RubberDuck Droid\nv0.2.2")
-      time.sleep(5)
+      time.sleep(1)
 
       speech_service = RubberDuckSpeechService()#device_name="sysdefault:CARD=wm8960soundcard")
-      speech_service.speak(text="Ready in ten seconds.")
+      speech_service.speak(text="Ready in five seconds.")
       time.sleep(5)
-      speech_service.speak(text="five")
-      time.sleep(5)
+      #speech_service.speak(text="five")
+      #time.sleep(5)
       speech_service.speak(text="starting to listen")
       time.sleep(1)
 

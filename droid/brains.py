@@ -11,11 +11,12 @@ import pvporcupine
 from pvrecorder import PvRecorder
 
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain.memory import ConversationBufferMemory
 from langchain.tools import tool
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_community.tools import SerpAPIWrapper
+from langchain_community.utilities import SerpAPIWrapper
 
 #import vumeter
 from display import Face, SummaryScreen
@@ -84,45 +85,130 @@ PROMPT_MESSAGES_EN = [
   }
 ]
 
-class ChatGPT():
+
+
+class LLM():
+  def _create_dummy_search_tool(self):
+    @tool
+    def search(query: str) -> str:
+        """Useful for when you need to answer questions about current events or search for specific information."""
+        return "I'm sorry, I don't have access to web search at the moment. Please provide a SERPAPI_API_KEY in the environment variables to enable this feature."
+    
+    return [search]
+
   def __init__(self):
-    self.prompt_messages = PROMPT_MESSAGES_EN.copy()
     self.last_question_time = time.time()
+    
+    # Check if SERPAPI_API_KEY is set in the environment
+    serpapi_key = os.environ.get("SERPAPI_API_KEY")
+    
+    # Set up tools
+    if serpapi_key:
+      try:
+        # Method 1: Using load_tools (preferred method)
+        self.tools = load_tools(["serpapi"])
+        print("Successfully loaded SerpAPI tool using load_tools")
+      except Exception as e:
+        print(f"Error loading SerpAPI with load_tools: {e}")
+        try:
+          # Method 2: Create tool manually
+          search_wrapper = SerpAPIWrapper()
+          
+          @tool
+          def search(query: str) -> str:
+              """Useful for when you need to answer questions about current events or search for specific information."""
+              return search_wrapper.run(query)
+          
+          self.tools = [search]
+          print("Successfully created SerpAPI tool manually")
+        except Exception as e:
+          print(f"Error creating SerpAPI manually: {e}")
+          self.tools = self._create_dummy_search_tool()
+    else:
+      print("SERPAPI_API_KEY not found in environment variables. Web search functionality is disabled.")
+      self.tools = self._create_dummy_search_tool()
+    
+    # Define available tools
+    #self.tools = [search]
+    
+    # Define system message with droid character and SSML formatting requirements
+    system_message = """Act as humorous Star Wars droid. Answer each 
+      sentence in your own line separated by newline character.
+      Sentences can include speech synthesis markup language (SSML)
+      emphasis tags. The last row contains a short couple of words summary.
+      Keep the answer under 600 characters.
+      
+      When answering questions about current events or when you don't know something,
+      use the search tool to find accurate information."""
+    
+    # Create the prompt template with system message and conversation history
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_message),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ]
+    )
+    
+    # Initialize the language model
+    self.llm = ChatOpenAI(
+        model="gpt-4.1",  # Updated model name for newer OpenAI client
+        temperature=0.5,
+        frequency_penalty=0.5,
+        presence_penalty=0.2
+    )
+    
+    # Set up conversation memory
+    self.memory = ConversationBufferMemory(return_messages=True, memory_key="chat_history")
+    
+    # Add example interactions to memory for few-shot learning
+    self.memory.chat_memory.add_user_message("How can I convert string to lowercase in Python?")
+    self.memory.chat_memory.add_ai_message("It is quite simple.\n You can use the <emphasis level=\"moderate\">lower</emphasis> method to convert given string to lowercase\n\n Summary: lower")
+    
+    self.memory.chat_memory.add_user_message("How about uppercase?")
+    self.memory.chat_memory.add_ai_message("Use the <emphasis level=\"moderate\">upper</emphasis> method.\n It will convert given string to uppercase\n\n Summary: upper")
+    
+    self.memory.chat_memory.add_user_message("What is the capital of Finland?")
+    self.memory.chat_memory.add_ai_message("<emphasis level=\"moderate\">Helsinki</emphasis>, of course.\n Did you really have to ask.\n\n Summary: Helsinki")
+    
+
+    # Try the newer API first
+    self.agent = create_tool_calling_agent(llm=self.llm, tools=self.tools, prompt=prompt)
+    
+    # Try the newer executor creation method
+    self.agent_executor = AgentExecutor.from_agent_and_tools(
+        agent=self.agent,
+        tools=self.tools,
+        memory=self.memory,
+        verbose=True,
+    )
 
   def answer_question_with_ssml(self, question, language="en-US"):
-    # Set up the model and prompt
-    # model_engine = "text-davinci-003"
-    model_engine = "gpt-4.1"
-
-    if time.time() - self.last_question_time > 900:
-      prompt_messages = PROMPT_MESSAGES_EN.copy()
-
-    self.prompt_messages.append({
-      "role": "user",
-      "content": question
-    })
-  
-    print("Prompt: {}".format(self.prompt_messages))
-    print("Initiating OpenAI ChatCompletion API call...")
+    # Reset conversation history if it's been too long
+    if time.time() - self.last_question_time > 900:  # 15 minutes
+      self.memory.clear()
+      # Re-add example interactions
+      self.memory.chat_memory.add_user_message("How can I convert string to lowercase in Python?")
+      self.memory.chat_memory.add_ai_message("It is quite simple.\n You can use the <emphasis level=\"moderate\">lower</emphasis> method to convert given string to lowercase\n\n Summary: lower")
+      
+      self.memory.chat_memory.add_user_message("How about uppercase?")
+      self.memory.chat_memory.add_ai_message("Use the <emphasis level=\"moderate\">upper</emphasis> method.\n It will convert given string to uppercase\n\n Summary: upper")
+      
+      self.memory.chat_memory.add_user_message("What is the capital of Finland?")
+      self.memory.chat_memory.add_ai_message("<emphasis level=\"moderate\">Helsinki</emphasis>, of course.\n Did you really have to ask.\n\n Summary: Helsinki")
+    
+    print("Prompt: {}".format(question))
+    print("Initiating LangChain agent execution...")
     summary_screen.showText("Thinking...")
-    # Generate the response
-    response = openai.ChatCompletion.create(
-      model=model_engine,
-      messages = self.prompt_messages,
-      max_tokens = 1024,
-      temperature = 0.5,
-      top_p = 1,
-      frequency_penalty = 0.5,
-      presence_penalty = 0.2,
-    )
-    print("OpenAI API call complete.")
-    print("OpenAI response: {}".format(response))
-    resp = response.choices[0].message.content # type: ignore
-    self.prompt_messages.append({
-      "role": "assistant",
-      "content": resp
-    })
-
+    
+    # Generate the response using the agent
+    result = self.agent_executor.invoke({"input": question}, config={"max_concurrency": 1})
+    resp = result["output"]
+    
+    print("LangChain agent execution complete.")
+    print("Agent response: {}".format(resp))
+    
     # Extract summary from the response
     summary = "-"
     answer = ""
@@ -135,11 +221,13 @@ class ChatGPT():
     
     print("Summary: {}".format(summary))
     summary_screen.showText(summary)
-
+    
+    # Update the last question time
+    self.last_question_time = time.time()
     
     return answer
 
-openai.api_key = os.environ.get('OPENAI_API_KEY')
+# LangChain will get the API key from the environment variable OPENAI_API_KEY
 
 class RubberDuckSpeechService():
   def __init__(self, device_name=None, language="en-US"):
@@ -208,25 +296,21 @@ class RubberDuckWakeWordDetector():
   WAKEWORD_ENGLISH = 0
   WAKEWORD_FINNISH = 1
   
-
   def __init__(
     self,
     access_key
   ):
     self._access_key = access_key
-    self.chat = ChatGPT()
+    self.chat = LLM()
     self.recorder = None
     
   def run(self):
     porcupine = None
     recorder = None
     try:
-      current_dir = os.path.dirname(os.path.abspath(__file__))
       porcupine = pvporcupine.create(
         access_key=self._access_key,
-        keyword_paths=[
-          os.path.join(current_dir, "Hi-droid_en_raspberry-pi_v3_0_0.ppn")
-        ]
+        keyword_paths=["droid/Hi-droid_en_raspberry-pi_v3_0_0.ppn"]
       )
       
       devices = PvRecorder.get_available_devices()
@@ -239,21 +323,21 @@ class RubberDuckWakeWordDetector():
       #     device_index = i
       #     device_name = devices[i]
       #     break
-      summary_screen.showText("RubberDuck Droid\nv0.2.2")
+      summary_screen.showText("RubberDuck Droid\nv0.3.0")
       time.sleep(1)
 
       speech_service = RubberDuckSpeechService()#device_name="sysdefault:CARD=wm8960soundcard")
-      speech_service.speak(text="Ready in five seconds.")
-      time.sleep(5)
+      #speech_service.speak(text="Ready in five seconds.")
+      #time.sleep(5)
       #speech_service.speak(text="five")
       #time.sleep(5)
-      speech_service.speak(text="starting to listen")
-      time.sleep(1)
+      speech_service.speak(text="I'm ready")
+      time.sleep(0.5)
 
       recorder = PvRecorder(device_index=device_index, frame_length=porcupine.frame_length)
       recorder.start()
       print('Listening for wake word...')
-      summary_screen.showText("Wake me by saying:\nHey Rubber Duck!")
+      summary_screen.showText("Wake me by saying:\nHi Droid!")
 
       while True:
         pcm = recorder.read()
@@ -293,6 +377,7 @@ class RubberDuckWakeWordDetector():
 
           time.sleep(0.8)
           print('Starting wake word detector.')
+          summary_screen.showText("Say:\nHi Droid!")
           recorder = PvRecorder(device_index=device_index, frame_length=porcupine.frame_length)
           recorder.start()
     except pvporcupine.PorcupineActivationError as e:
@@ -343,12 +428,12 @@ try:
   print("Starting Rubber Duck display thread...")
   face_thread.start()
   print("Starting Rubber Duck wake word detector thread...")
-  main_thread = Thread(target=main)
-  main_thread.start()
+  main()
   #vumeter.vumeter()
 
 except KeyboardInterrupt:
   print('Exiting...')
+finally:
   stop_event.set()
   face_thread.join()
   

@@ -45,10 +45,15 @@ Install required packages:
 poetry install
 ```
 
-Start the droid:
+Start the voice chat droid:
 
 ```sh
 python3 main.py
+```
+
+...or better version: start the Agent with Tools (e.g. web search) droid:
+```
+python3 droid/brain.py
 ```
 
 # Wakeword files

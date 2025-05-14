@@ -1,6 +1,16 @@
+# DroidAgent CLI Usage
+
+You can use the DroidAgent (Star Wars droid chat agent) without speech capabilities via a simple CLI:
+
+```bash
+poetry run python -m droid.agent.cli
+```
+
+Type your questions and chat with the DroidAgent. Type `exit` to quit.
+
+The agent uses LangChain and Azure OpenAI (see environment variables in the main project README).
+
 # Rubberduck Droid
-
-
 
 Azure OpenaI Realtime code is mostly based on sample code from [aoai-realtime-audio-sdk](https://github.com/Azure-Samples/aoai-realtime-audio-sdk).
 

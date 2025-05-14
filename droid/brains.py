@@ -10,7 +10,7 @@ import azure.cognitiveservices.speech as speechsdk
 import pvporcupine
 from pvrecorder import PvRecorder
 
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain.memory import ConversationBufferMemory
@@ -87,7 +87,7 @@ PROMPT_MESSAGES_EN = [
 
 
 
-class LLM():
+class DroidAgent():
   def _create_dummy_search_tool(self):
     @tool
     def search(query: str) -> str:
@@ -152,11 +152,13 @@ class LLM():
     )
     
     # Initialize the language model
-    self.llm = ChatOpenAI(
-        model="gpt-4.1",  # Updated model name for newer OpenAI client
-        temperature=0.5,
-        frequency_penalty=0.5,
-        presence_penalty=0.2
+    self.llm = AzureChatOpenAI(
+#        model="gpt-4.1",  # Updated model name for newer OpenAI client
+        azure_deployment="o4-mini",
+        api_version="2024-12-01-preview"
+        #temperature=0.5,
+        #frequency_penalty=0.5,
+        #presence_penalty=0.2
     )
     
     # Set up conversation memory
@@ -301,7 +303,7 @@ class RubberDuckWakeWordDetector():
     access_key
   ):
     self._access_key = access_key
-    self.chat = LLM()
+    self.chat = DroidAgent()
     self.recorder = None
     
   def run(self):
@@ -436,4 +438,5 @@ except KeyboardInterrupt:
 finally:
   stop_event.set()
   face_thread.join()
+  summary_screen.poweroff()
   

@@ -18,6 +18,7 @@ def main():
     agent = DroidAgent()
     while True:
         try:
+            print("")
             question = input("You: ")
         except (EOFError, KeyboardInterrupt):
             print("\nExiting...")

@@ -5,6 +5,7 @@ Exposes HTTP API and interactive playground UI.
 """
 from typing import Any
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from langserve import add_routes
 from openai import BaseModel
 
@@ -47,6 +48,9 @@ async def ask(question: str, language: str = "en-US"):
     """
     answer = droid_agent.answer_question_with_ssml(question, language)
     return {"answer": answer}
+
+app.mount("/", 
+        StaticFiles(directory="chat-dist", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

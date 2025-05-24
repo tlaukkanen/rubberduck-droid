@@ -8,3 +8,7 @@
 log/*
 .env
 chat-dist
+droid-web/dist/*
+**/node_modules/*
+**/dist/*
+

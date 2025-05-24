@@ -34,7 +34,9 @@ class Output(BaseModel):
 
 add_routes(
     app,
-    droid_agent.get_runnable().with_types(input_type=Input, output_type=Output),
+    droid_agent.get_runnable(),
+    input_type=Input,
+    output_type=Output,
     path="/droid"
 )
 

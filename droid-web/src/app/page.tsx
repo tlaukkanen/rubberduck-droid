@@ -4,10 +4,17 @@ import {AiChat} from '@nlux/react';
 import {useChatAdapter} from '@nlux/langchain-react';
 import '@nlux/themes/nova.css';
 
+export type DroidOutput = {
+  output: string;
+  input: string;
+}
+
 const Page = () => {
+
   // LangServe adapter that connects to a demo LangChain Runnable API
-  const adapter = useChatAdapter({
-    url: '/droid'
+  const adapter = useChatAdapter<DroidOutput>({
+    url: 'http://localhost:8000/droid',
+    dataTransferMode: 'batch',
   });
 
   return (

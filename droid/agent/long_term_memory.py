@@ -92,6 +92,14 @@ class LongTermMemoryManager:
         self.container.create_item(body=memory_item.dict())
         return f"Memory stored successfully with ID: {memory_item.id}"
 
+    def remove_memory(self, memory_id: str) -> str:
+        """Remove a memory item by its ID."""
+        try:
+            self.container.delete_item(item=memory_id, partition_key=self.user_id)
+            return f"Memory with ID {memory_id} deleted successfully."
+        except Exception as e:
+            return f"Error deleting memory with ID {memory_id}: {str(e)}"
+
     def retrieve_memories(
         self,
         query: str,
@@ -138,13 +146,14 @@ class LongTermMemoryManager:
 
         result = f"Found {len(items)} memories:\n"
         for item in items:
-            result += f"- [{item['memory_type']}] {item['content']} (Category: {item['category']})\n"
+            result += f"- ID: {item['id']} | [{item['memory_type']}] {item['content']} (Category: {item['category']})\n"
 
         return result
 
 
 def create_memory_tool(user_id: str = "default_user") -> StructuredTool:
     """Factory function to create a long-term memory tool."""
+
 
 
     def memory_tool_func(*args, **kwargs) -> str:
@@ -187,27 +196,35 @@ def create_memory_tool(user_id: str = "default_user") -> StructuredTool:
                     category=params.get("category"),
                     limit=params.get("limit", 10),
                 )
+            elif action == "remove":
+                memory_id = params.get("memory_id")
+                if not memory_id:
+                    return "Missing 'memory_id' for remove action."
+                return memory_manager.remove_memory(memory_id)
             elif args and not kwargs and isinstance(args[0], str):
                 # Simple string input, treat as retrieve
                 return memory_manager.retrieve_memories(args[0])
             else:
-                return f"Unknown action: {action}. Available actions: store, retrieve"
+                return f"Unknown action: {action}. Available actions: store, retrieve, remove"
 
         except (ValueError, TypeError, ConnectionError) as e:
             return f"Error in memory tool: {str(e)}"
 
     return StructuredTool(
         name="long_term_memory",
-        description="""Use this tool to store and retrieve long-term memories about users, facts, and conversation context.
+        description="""Use this tool to store, retrieve, and remove long-term memories about users, facts, and conversation context.
 
 For storing memories, use JSON format: {"action": "store", "memory_type": "fact|trait|preference|context", "content": "memory content", "category": "category name"}
 
 For retrieving memories, use JSON format: {"action": "retrieve", "query": "search query"} or just provide the search query directly.
 
+For removing a memory, use JSON format: {"action": "remove", "memory_id": "<memory_id>"}
+
 Examples:
 - Store: {"action": "store", "memory_type": "preference", "content": "User likes Python programming", "category": "programming"}
 - Retrieve: {"action": "retrieve", "query": "programming preferences"}
 - Simple retrieve: "programming preferences"
+- Remove: {"action": "remove", "memory_id": "<memory_id>"}
 
 Memory types:
 - fact: Factual information about the user

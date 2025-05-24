@@ -1,4 +1,6 @@
-
+"""
+Rubber Duck Droid - A Raspberry Pi powered AI assistant
+"""
 import faulthandler
 import json
 import os
@@ -24,7 +26,10 @@ class RubberDuckSpeechService():
   def __init__(self, device_name=None, language="en-US"):
     # Requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
     self._device_name = device_name
-    self._speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
+    self._speech_config = speechsdk.SpeechConfig(
+      subscription=os.environ.get('SPEECH_KEY'),
+      region=os.environ.get('SPEECH_REGION')
+    )
     self._speech_config.speech_recognition_language = language
 
   def recognize_from_microphone(self):
@@ -49,8 +54,9 @@ class RubberDuckSpeechService():
       if cancellation_details.reason == speechsdk.CancellationReason.Error:
         print("Error details: {}".format(cancellation_details.error_details))
         print("Did you set the speech resource key and region values?")
-  
+
   def speak(self, text, language="en-GB"):
+    """Speak the given text using Azure Cognitive Services Text-to-Speech."""
     audio_config = speechsdk.audio.AudioOutputConfig(device_name="sysdefault:CARD=wm8960soundcard")# filename="temp_speech.wav") #device_name="sysdefault:CARD=wm8960soundcard") #device_name=self._device_name)
     speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=self._speech_config, audio_config=audio_config)
     lang_model = "en-GB-ThomasNeural"
@@ -92,7 +98,7 @@ class RubberDuckWakeWordDetector():
     access_key
   ):
     self._access_key = access_key
-    self.chat = DroidAgent()
+    self.chat = DroidAgent(enable_voice=True, user_id="default_user")
     self.recorder = None
     
   def run(self):

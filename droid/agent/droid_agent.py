@@ -11,6 +11,7 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain_community.chat_message_histories import ChatMessageHistory
+from .long_term_memory import create_memory_tool
 
 
 class DroidAgent:
@@ -18,14 +19,32 @@ class DroidAgent:
     A class that represents a humorous Star Wars droid agent capable of answering questions
     using SSML formatting. The agent can also perform web searches if a valid API key is provided.
     """
-
-    def __init__(self, enable_voice: bool = True):
+    
+    def __init__(self, enable_voice: bool = True, user_id: str = "default_user"):
         self.last_question_time = time.time()
+        self.user_id = user_id
+        
+        # Initialize tools
+        self.tools = []
+        
+        # Add SerpAPI tool if available
         serpapi_key = os.environ.get("SERPAPI_API_KEY")
         if serpapi_key:
-            self.tools = load_tools(["serpapi"])
+            self.tools.extend(load_tools(["serpapi"]))
         else:
             print("No SERPAPI_API_KEY found.")
+          # Add long-term memory tool if Cosmos DB is configured
+        try:
+            cosmos_endpoint = os.environ.get("COSMOS_ENDPOINT")
+            cosmos_key = os.environ.get("COSMOS_KEY")
+            if cosmos_endpoint and cosmos_key:
+                memory_tool = create_memory_tool(user_id=user_id)
+                self.tools.append(memory_tool)
+                print("Long-term memory tool enabled.")
+            else:
+                print("COSMOS_ENDPOINT and/or COSMOS_KEY not found. Long-term memory disabled.")
+        except (ImportError, ValueError, ConnectionError) as e:
+            print(f"Failed to initialize long-term memory: {e}")
 
         system_message = (
             """
@@ -35,6 +54,23 @@ class DroidAgent:
             
             When answering questions about current events or when you don't know something, 
             use the search tool to find accurate information.
+            
+            You have access to a long-term memory tool that allows you to:
+            - Store important facts, user preferences, and traits from conversations
+            - Retrieve previously stored information to provide personalized responses
+            - Remember context between sessions
+            
+            Use the long-term memory tool to:
+            1. Store interesting facts or personal information the user shares
+            2. Remember user preferences and traits
+            3. Retrieve relevant stored information when answering questions
+            4. Build continuity across conversations
+            
+            Store memories when users mention:
+            - Personal preferences (favorite foods, hobbies, etc.)
+            - Important facts about themselves (job, family, location, etc.)
+            - Technical preferences or setup details
+            - Previous conversation topics that might be relevant later
             """)
         
         if enable_voice:

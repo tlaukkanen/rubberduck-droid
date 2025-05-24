@@ -18,11 +18,28 @@ Future ideas:
 
 # How to run?
 
-Copy .env.template to .env and define environment variables:
+Copy .env.example to .env and define environment variables:
+- AZURE_OPENAI_ENDPOINT=<Azure OpenAI endpoint>
+- AZURE_OPENAI_API_KEY=<Azure OpenAI API key>
+- AZURE_OPENAI_API_VERSION=<API version, e.g., 2024-12-01-preview>
 - SPEECH_KEY=<Azure text-to-speech API key>
-- OPENAI_API_KEY=<OpenAI API key>
-- SPEECH_REGION<Azure region for your Speech service>
+- SPEECH_REGION=<Azure region for your Speech service>
 - PORCUPINE_ACCESS_KEY=<Porcupine access key for speech-to-text>
+- SERPAPI_API_KEY=<SerpAPI key for web search (optional)>
+
+## Long-term Memory with Azure Cosmos DB
+
+The DroidAgent now supports long-term memory using Azure Cosmos DB. This allows the droid to:
+- Remember user preferences and personal information
+- Store facts and context from conversations
+- Provide personalized responses based on past interactions
+- Maintain continuity across sessions
+
+To enable long-term memory, add these environment variables:
+- COSMOS_ENDPOINT=<Your Azure Cosmos DB endpoint>
+- COSMOS_KEY=<Your Azure Cosmos DB primary key>
+
+The droid will automatically create the necessary database and container if they don't exist.
 
 It's good practice to create virtual environment:
 
@@ -55,6 +72,22 @@ python3 main.py
 ```
 python3 droid/brain.py
 ```
+
+## Testing Long-term Memory
+
+To test the long-term memory functionality, you can run:
+
+```sh
+python3 test_memory.py
+```
+
+This script demonstrates how the droid can store and retrieve personal information, preferences, and conversation context.
+
+The memory system supports different types of memories:
+- **facts**: Factual information about the user
+- **traits**: Personal characteristics and preferences  
+- **preferences**: User preferences for various topics
+- **context**: Conversation context and technical details
 
 # Wakeword files
 

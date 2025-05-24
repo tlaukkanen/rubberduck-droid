@@ -392,6 +392,22 @@ aio = ["aiohttp (>=3.0)"]
 tracing = ["opentelemetry-api (>=1.26,<2.0)"]
 
 [[package]]
+name = "azure-cosmos"
+version = "4.9.0"
+description = "Microsoft Azure Cosmos Client Library for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "azure_cosmos-4.9.0-py3-none-any.whl", hash = "sha256:3b60eaa01a16a857d0faf0cec304bac6fa8620a81bc268ce760339032ef617fe"},
+    {file = "azure_cosmos-4.9.0.tar.gz", hash = "sha256:c70db4cbf55b0ff261ed7bb8aa325a5dfa565d3c6eaa43d75d26ae5e2ad6d74f"},
+]
+
+[package.dependencies]
+azure-core = ">=1.30.0"
+typing-extensions = ">=4.6.0"
+
+[[package]]
 name = "binho-host-adapter"
 version = "0.1.6"
 description = "Python Libraries for Binho Multi-Protocol USB Host Adapters"
@@ -3289,4 +3305,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "898d124d96ba96b81b29f8a92887ff80cb925ea0650f7da4a8eaded54f7f8413"
+content-hash = "6f283d77d08631d9bb87716af945beef4402e17cbf5f84c5bc9411ca7492ef3e"

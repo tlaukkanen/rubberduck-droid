@@ -12,21 +12,35 @@ from azure.cosmos import CosmosClient, PartitionKey
 from pydantic import BaseModel, Field
 
 from langchain.tools import StructuredTool
+import shortuuid
+
+
 class MemoryToolInput(BaseModel):
+    """Input schema for the long-term memory tool."""
+
     action: str = Field(..., description="Action to perform: store or retrieve")
-    memory_type: Optional[str] = Field(None, description="Type of memory: fact, trait, preference, context")
+    memory_type: Optional[str] = Field(
+        None, description="Type of memory: fact, trait, preference, context"
+    )
     content: Optional[str] = Field(None, description="The actual memory content")
     category: Optional[str] = Field(None, description="Category or topic of the memory")
-    tags: Optional[List[str]] = Field(default_factory=list, description="Tags for searching")
-    confidence: Optional[float] = Field(1.0, description="Confidence level of the memory (0-1)")
-    query: Optional[str] = Field(None, description="Search query for retrieving memories")
+    tags: Optional[List[str]] = Field(
+        default_factory=list, description="Tags for searching"
+    )
+    confidence: Optional[float] = Field(
+        1.0, description="Confidence level of the memory (0-1)"
+    )
+    query: Optional[str] = Field(
+        None, description="Search query for retrieving memories"
+    )
     limit: Optional[int] = Field(10, description="Number of memories to retrieve")
+    memory_id: Optional[str] = Field(None, description="ID of the memory to remove")
 
 
 class MemoryItem(BaseModel):
     """Represents a memory item stored in Cosmos DB."""
 
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = Field(default_factory=lambda: str(shortuuid.uuid()[:8]))
     user_id: str = Field(description="Identifier for the user")
     memory_type: str = Field(
         description="Type of memory: fact, trait, preference, context"
@@ -154,10 +168,11 @@ class LongTermMemoryManager:
 def create_memory_tool(user_id: str = "default_user") -> StructuredTool:
     """Factory function to create a long-term memory tool."""
 
-
-
     def memory_tool_func(*args, **kwargs) -> str:
-        """Handle memory tool operations. Accepts both positional and keyword arguments for compatibility with StructuredTool."""
+        """
+        Handle memory tool operations. Accepts both positional and
+        keyword arguments for compatibility with StructuredTool.
+        """
         try:
             memory_manager = LongTermMemoryManager(user_id)
 
@@ -179,7 +194,9 @@ def create_memory_tool(user_id: str = "default_user") -> StructuredTool:
             else:
                 params = kwargs
 
-            action = params.get("action", "").lower() if isinstance(params, dict) else ""
+            action = (
+                params.get("action", "").lower() if isinstance(params, dict) else ""
+            )
 
             if action == "store":
                 return memory_manager.store_memory(
@@ -198,6 +215,7 @@ def create_memory_tool(user_id: str = "default_user") -> StructuredTool:
                 )
             elif action == "remove":
                 memory_id = params.get("memory_id")
+                print(f"Removing memory with ID: {memory_id}")
                 if not memory_id:
                     return "Missing 'memory_id' for remove action."
                 return memory_manager.remove_memory(memory_id)

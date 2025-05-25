@@ -11,6 +11,8 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.chat_history import InMemoryChatMessageHistory
 from .long_term_memory import create_memory_tool
 
 
@@ -85,7 +87,8 @@ class DroidAgent:
             
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_message),
-            #MessagesPlaceholder(variable_name="chat_history"),
+            #("placeholder", )
+            MessagesPlaceholder(variable_name="chat_history"),
             ("user", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
@@ -93,24 +96,36 @@ class DroidAgent:
             azure_deployment="gpt-4.1",
             api_version="2024-12-01-preview"
         )
-        self.memory = ConversationBufferMemory(
-            chat_memory=ChatMessageHistory(),
-            memory_key="chat_history",
-            input_key="input",
-            output_key="output",
-            return_messages=True
+        # self.memory = ConversationBufferMemory(
+        #     chat_memory=ChatMessageHistory(),
+        #     memory_key="chat_history",
+        #     input_key="input",
+        #     output_key="output",
+        #     return_messages=True
+        # )
+        
+        self.memory = InMemoryChatMessageHistory(
+            session_id=self.user_id
         )
         
         self.agent = create_tool_calling_agent(
-            llm=self.llm, 
+            llm=self.llm,
             tools=self.tools,
             prompt=prompt,
+            
         )
         self.agent_executor = AgentExecutor.from_agent_and_tools(
             agent=self.agent,
             tools=self.tools,
-            memory=self.memory,
             verbose=True,
+        )
+        
+        self.agent_with_chat_history = RunnableWithMessageHistory(
+            self.agent_executor,
+            lambda session_id: self.memory,
+            input_messages_key="input",
+            output_messages_key="output",
+            history_messages_key="chat_history",
         )
     
     class AgentInput(BaseModel):
@@ -126,6 +141,7 @@ class DroidAgent:
     def answer_question_with_ssml(self, question, language="en-US"):
         """Answer a question using the LangChain agent with SSML formatting."""
         if time.time() - self.last_question_time > 900:
+            print("Resetting memory due to inactivity.")
             self.memory.clear()
             self.memory.chat_memory.add_user_message(
                 "How can I convert string to lowercase in Python?")
@@ -140,8 +156,9 @@ class DroidAgent:
                 "<emphasis level=\"moderate\">Helsinki</emphasis>, of course.\n Did you really have to ask.\n\n Summary: Helsinki")
 
         # Initiating LangChain agent execution...
-        result = self.agent_executor.invoke(
-            {"input": question}, config={"max_concurrency": 1})
+        config = {"configurable": {"session_id": self.user_id}, "max_concurrency": 1}
+        result = self.agent_with_chat_history.invoke(
+            {"input": question}, config=config)
         resp = result["output"]
 
         # LangChain agent execution complete

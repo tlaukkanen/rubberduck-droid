@@ -65,12 +65,13 @@ poetry install
 Start the voice chat droid:
 
 ```sh
-python3 main.py
+poetry run python main.py
 ```
 
-...or better version: start the Agent with Tools (e.g. web search) droid:
-```
-python3 droid/brain.py
+...or better version: start the Droid Agent with Tools like web search and long-term memory:
+
+```sh
+poetry run python -m droid.brains
 ```
 
 ## Testing Long-term Memory

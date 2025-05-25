@@ -163,9 +163,12 @@ class DroidAgent:
 
         # LangChain agent execution complete
         answer = ""
+        self.summary = ""
         if resp.find("Summary: ") > -1:
+            self.summary = resp.split("Summary: ")[1]
             answer = resp.split("Summary: ")[0]
         if resp.find("Yhteenveto: ") > -1:
+            self.summary = resp.split("Yhteenveto: ")[1]
             answer = resp.split("Yhteenveto: ")[0]
         else:
             answer = resp

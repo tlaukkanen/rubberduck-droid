@@ -29,8 +29,8 @@ class WakeWordDetector():
       devices = PvRecorder.get_available_devices()  #.get_audio_devices()
       device_index = 1
       device_name = "Built-in Audio Multichannel"
-      # for i in range(len(devices)):
-      #    print('index: %d, device name: %s' % (i, devices[i]))
+      for i in range(len(devices)):
+          print('index: %d, device name: %s' % (i, devices[i]))
       #    # If device name contains wm8960-soundcard, use that device
       #    if devices[i].find('wm8960-soundcard') != -1:
       #      device_index = i

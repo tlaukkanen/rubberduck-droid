@@ -10,11 +10,14 @@ import time
 from threading import Event, Thread
 
 import azure.cognitiveservices.speech as speechsdk
+from dotenv import load_dotenv
 import pvporcupine
 from pvrecorder import PvRecorder
 
-from display import Face, SummaryScreen
+from .display import Face, SummaryScreen
 from droid.agent import DroidAgent
+
+load_dotenv()
 
 faulthandler.enable()
 face = Face()
@@ -169,6 +172,7 @@ class RubberDuckWakeWordDetector():
             else:
               print('Prompt GPT with user input: %s' % question)
               response = self.chat.answer_question_with_ssml(question, language=lang_code)
+              summary_screen.showText(self.chat.summary)
               print('GPT response: %s' % response)
               speech_service.speak(text=response, language=lang_code)
 

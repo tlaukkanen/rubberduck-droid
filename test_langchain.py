@@ -21,10 +21,10 @@ if not os.environ.get('OPENAI_API_KEY') and os.environ.get('AZURE_OPENAI_API_KEY
 
 try:
     print("Importing LLM class...")
-    from droid.brains import LLM
+    from droid.brains import DroidAgent
     
     print("Creating LLM instance...")
-    gpt = LLM()
+    gpt = DroidAgent()
     print("LLM instance created successfully!")
     
     for tool in gpt.tools:
